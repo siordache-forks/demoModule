@@ -1,3 +1,15 @@
+import org.gradle.testkit.runner.GradleRunner
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath gradleTestKit()
+    }
+}
+
+
 plugins {
 	id 'application'
 	id 'eclipse'
@@ -13,8 +25,6 @@ repositories {
 		dirs 'lib'
 	}
 }
-
-// buildDir = 'c:\\demoModuleBuild'
 
 dependencies {
     testImplementation 'junit:junit:4.12'
@@ -48,17 +58,16 @@ run {
     jvmArgs "-Djava.library.path=$projectDir/dll"
 }
 
+test {
+    jvmArgs "-Djava.library.path=$projectDir/dll"
+}
+
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages', '--ignore-signing-information']
     
     jpackage {
     	skipInstaller = true
-    	
-    	// imageOptions = ['--arguments', 'zzz yyy xxx']
-    	// jvmArgs = application.applicationDefaultJvmArgs
-        // installerOutputDir = file("releases")
-        // installerOptions = ['--temp', 'releases/temp-files']
-        // jpackageHome = '/usr/lib/jvm/jdk14'
+    	outputDir = "jpackage/$customerId"
     }
 }
 
@@ -93,69 +102,41 @@ tasks.jpackageImage {
 	}
 }
 
-task zzz {
-	doLast {
-//		println "### run args: ${project.tasks.run.args}"
-		def deps = project.configurations['runtimeClasspath'].resolvedConfiguration.firstLevelModuleDependencies
-		println "###### deps: $deps"		
+
+task jpackageAll {
+	doFirst {
+		println "Creating packages for all customers"
+		file("config").eachDir {
+			def customer = it.name
+
+            GradleRunner.create()
+                    .withDebug(true)
+                    .withProjectDir(projectDir)
+                    .forwardOutput()
+                    .withArguments("-is", "-P", "customerId=$customer", "build", "jpackage")
+                    .build();
+		}
 	}
 }
 
+// This doesn't work currently due to https://github.com/gradle/gradle/issues/11301
 /*
-task me(type: GradleBuild){
-    buildFile 'mybuild.gradle' //defaults to build.gradle so not needed
-    dir 'someDir'
-    tasks 'clean', 'build'
-}
-*/
-
-
-
-/*
-jlink {
-	mergedModule {
-        requires "java.xml"
-    }
-    
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages', '--ignore-signing-information']
-    launcher {
-        name = 'demoProject'
-    }
-    
-    launcher {
-        name = 'demoProjectLauncher'
-        //'-Djava.library.path=resources\matrixlock'
-        jvmArgs = ['-Dsun.io.serialization.extendedDebugInfo=true', '-showversion', '-XX:+ShowMessageBoxOnError', '-XX:ErrorFile=error.log', '-Xms2g' ,'-Xmx2g', '-Xss512m', '-Duser.language=en']
-        args = ['--win9x']
-    }  
-}
-*/
-
-/*
-task demoBuild {
-	println "Demo Build"
-	println new Date().format( 'yyyyMMdd' )
+task jpackageAllOrig {
+	doFirst {
+		println "Creating packages for all customers"
+	}
 }
 
-def customers = ['customer01','customer02']
-
-task customerJ {
-	customers.each  { cust -> println cust
-		task "fatJar$cust" (type: Jar, description:cust, dependsOn: jar){
-				println "TaskJar: "+description
-	
-			ext{
-				customer=cust
-			}
-			println "Its customer: " + customer
-			archiveName customer+"_"+version+".jar"
-			into ('config') {
-				from ("resources/config/$cust/") 
-			}
+file("config").eachDir {
+	def customer = it.name
+	task "jpackage_$customer"(type: GradleBuild) {
+		startParameter.projectProperties.customerId = customer
+		// dir = file(".")
+		tasks = [ 'clean', 'build', 'jpackage' ]
+		doFirst {
+			println "Creating package for customer $customer"
 		}
-		tasks["fatJar$cust"].dependsOn clean
-		tasks["fatJar$cust"].mustRunAfter clean
-		demoBuild.dependsOn tasks["fatJar$cust"]
-		}
+	}
+	tasks.jpackageAll.dependsOn tasks["jpackage_$customer"]
 }
 */
