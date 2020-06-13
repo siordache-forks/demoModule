@@ -2,7 +2,7 @@ plugins {
 	id 'application'
 	id 'eclipse'
     id 'org.openjfx.javafxplugin' version '0.0.8'
-    id 'org.beryx.runtime' version '1.8.6'
+    id 'org.beryx.runtime' version '1.9.1'
 }
 
 repositories {
@@ -17,8 +17,6 @@ repositories {
 // buildDir = 'c:\\demoModuleBuild'
 
 dependencies {
-//    implementation 'net.java.dev.jna:jna:5.5.0'
-
     testImplementation 'junit:junit:4.12'
 }
 
@@ -37,7 +35,6 @@ application {
     mainClass = "demoProject.Launcher"
     applicationName = 'demoProject'
     applicationDefaultJvmArgs = [
-    	"-Djava.library.path=$projectDir/dll",
     	'-Dsun.io.serialization.extendedDebugInfo=true', 
     	'-showversion', 
     	'-XX:+ShowMessageBoxOnError', 
@@ -48,17 +45,17 @@ application {
 
 run {
     args '--win9x'
+    jvmArgs "-Djava.library.path=$projectDir/dll"
 }
 
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages', '--ignore-signing-information']
-    additive = true
-    modules = ['java.management']
     
     jpackage {
     	skipInstaller = true
-    	imageOptions = ['--arguments', 'zzz yyy xxx']
-    	jvmArgs = application.applicationDefaultJvmArgs
+    	
+    	// imageOptions = ['--arguments', 'zzz yyy xxx']
+    	// jvmArgs = application.applicationDefaultJvmArgs
         // installerOutputDir = file("releases")
         // installerOptions = ['--temp', 'releases/temp-files']
         // jpackageHome = '/usr/lib/jvm/jdk14'
@@ -71,9 +68,24 @@ tasks.processResources {
 	into sourceSets.main.java.outputDir
 }
 
+tasks.installDist {
+	doLast {
+		copy {
+			from "dll"
+			into "$destinationDir/bin"
+		}
+	}
+}
+
+tasks.startScripts {
+    def gen = windowsStartScriptGenerator
+    gen.template = resources.text.fromString(gen.template.asString().replace(
+    	'DEFAULT_JVM_OPTS=${defaultJvmOpts}', 
+    	'DEFAULT_JVM_OPTS="-Djava.library.path=%APP_HOME%\\\\bin" ${defaultJvmOpts}'))
+}
+
 tasks.jpackageImage {
 	doLast {
-		println "#### imageOutputDir: $jpackageData.imageOutputDir/$jpackageData.imageName"
 		copy {
 			from "dll"
 			into "$jpackageData.imageOutputDir/$jpackageData.imageName"
@@ -81,6 +93,13 @@ tasks.jpackageImage {
 	}
 }
 
+task zzz {
+	doLast {
+//		println "### run args: ${project.tasks.run.args}"
+		def deps = project.configurations['runtimeClasspath'].resolvedConfiguration.firstLevelModuleDependencies
+		println "###### deps: $deps"		
+	}
+}
 
 /*
 task me(type: GradleBuild){
