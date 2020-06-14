@@ -4,7 +4,7 @@ This simple Windows application shows how to create multiple executable images, 
 
 For each customer, we store its specific resources and configuration files in a subdirectory of the `config` directory. The name of the subdirectory is given by the `customerId`. In our example, we consider three customers: Amazon, Facebook, and Google, where the `customerId` is the customer name in lowercase.
 
-The customized executables display the customer logo and a greeting. The greeting message is provided by a DLL available in the `dll` directory. The color of the greeting message is configured in the `customer.properties` file available in each customer-specific subdirectory.
+The bespoke executables display the customer logo and a greeting. The greeting message is provided by a DLL available in the `dll` directory. The color of the greeting message is configured in the `customer.properties` file available in each customer-specific subdirectory.
 
 customerId: amazon |customerId: facebook | customerId: google
 -------------------|---------------------|-------------------
