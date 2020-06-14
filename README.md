@@ -45,7 +45,7 @@ gradlew -P customerId=google installDist
 The Gradle script takes care of several things:
 - configures `java.library.path` for the `run` task:
 ```
-run     {
+run {
     jvmArgs "-Djava.library.path=$projectDir/dll"
 }
 ```
