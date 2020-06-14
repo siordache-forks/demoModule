@@ -8,7 +8,7 @@ The customized executables display the customer logo and a greeting. The greetin
 
 customerId: amazon |customerId: facebook | customerId: google
 -------------------|---------------------|-------------------
-![amazon](/doc/amazon.png)|![facebook](/doc/facebook.png)|![google](/doc/google.png)
+![amazon](/demoProject/doc/amazon.png)|![facebook](/demoProject/doc/facebook.png)|![google](/demoProject/doc/google.png)
 
 To create the bespoke executables run:
 ```
